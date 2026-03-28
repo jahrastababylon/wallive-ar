@@ -15,8 +15,8 @@
   --dark:     #121110;
   --panel:    #181612;
   --border:   #252320;
-  --muted:    #38352f;
-  --text-dim: #72706a;
+  --muted:    #6a6660;
+  --text-dim: #9e9b94;
   --text:     #c0bbb2;
   --light:    #e4dfd4;
   --white:    #f4f0e6;
@@ -173,7 +173,7 @@ h1 em { font-style: italic; color: var(--gold); }
 .step:last-child { border-bottom: none; }
 .step-n { font-family: var(--mono); font-size: 10px; color: var(--gold); padding-top: 3px; letter-spacing: .1em; }
 .step h3 { font-family: var(--serif); font-size: 21px; font-weight: 400; color: var(--white); margin-bottom: 6px; }
-.step p { font-size: 14px; color: var(--text-dim); line-height: 1.65; }
+.step p { font-size: 15px; color: var(--text); line-height: 1.65; }
 
 /* DEMO */
 #demo { padding: 100px 0 80px; border-top: 1px solid var(--border); background: var(--dark); }
@@ -335,11 +335,11 @@ h1 em { font-style: italic; color: var(--gold); }
 .exp-tag { font-family: var(--mono); font-size: 8px; letter-spacing: .18em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 12px; }
 .exp-name { font-family: var(--serif); font-size: 28px; font-weight: 300; color: var(--white); line-height: 1.1; margin-bottom: 6px; }
 .exp-date { font-family: var(--mono); font-size: 9px; color: var(--gold-dim); letter-spacing: .12em; margin-bottom: 20px; }
-.exp-desc { font-size: 14px; color: var(--text-dim); line-height: 1.72; flex: 1; margin-bottom: 28px; }
+.exp-desc { font-size: 15px; color: var(--text); line-height: 1.72; flex: 1; margin-bottom: 28px; }
 
 .exp-detail { padding-top: 20px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
 .detail-row { display: flex; justify-content: space-between; align-items: baseline; }
-.detail-key { font-family: var(--mono); font-size: 8px; letter-spacing: .15em; text-transform: uppercase; color: var(--muted); }
+.detail-key { font-family: var(--mono); font-size: 8px; letter-spacing: .15em; text-transform: uppercase; color: var(--text-dim); }
 .detail-val { font-size: 13px; color: var(--text); font-weight: 400; }
 
 .exp-cta {
@@ -366,15 +366,15 @@ h1 em { font-style: italic; color: var(--gold); }
 .value-list { display: flex; flex-direction: column; }
 .value-item { padding: 26px 0; border-bottom: 1px solid var(--border); }
 .value-item:last-child { border-bottom: none; }
-.value-item h3 { font-family: var(--serif); font-size: 20px; font-weight: 400; color: var(--white); margin-bottom: 7px; }
-.value-item p { font-size: 14px; color: var(--text-dim); line-height: 1.65; max-width: 540px; }
+.value-item h3 { font-family: var(--serif); font-size: 21px; font-weight: 400; color: var(--white); margin-bottom: 7px; letter-spacing: .01em; }
+.value-item p { font-size: 15px; color: var(--text); line-height: 1.68; max-width: 540px; }
 
 /* CONTACT */
 #contact { padding: 100px 0 80px; border-top: 1px solid var(--border); background: var(--dark); }
 .contact-head { margin-bottom: 48px; }
 .contact-head h2 { font-family: var(--serif); font-weight: 300; font-size: clamp(28px, 6vw, 50px); color: var(--white); line-height: 1.12; margin-bottom: 16px; }
 .contact-head h2 em { font-style: italic; color: var(--gold); }
-.contact-head p { font-size: 15px; color: var(--text-dim); line-height: 1.7; max-width: 480px; }
+.contact-head p { font-size: 15px; color: var(--text); line-height: 1.7; max-width: 480px; }
 .contact-links { display: flex; flex-direction: column; gap: 2px; }
 .contact-link {
   display: flex; align-items: center; gap: 16px;
@@ -589,14 +589,14 @@ footer { border-top: 1px solid var(--border); padding: 28px 32px; display: flex;
       <p>WALLIVE is available for museums, cultural institutions and heritage organisations on annual platform licences. We deliver the AR experience and maintain the infrastructure.</p>
     </div>
     <div class="contact-links">
-      <a class="contact-link" href="mailto:hello@wallive.app">
+      <a class="contact-link" href="/cdn-cgi/l/email-protection#ec8489808083ac9b8d8080859a89c28d9c9c">
         <div class="contact-icon">
           <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
             <rect x="1" y="3" width="13" height="9" rx="1" stroke="currentColor" stroke-width="1.2"/>
             <path d="M1 4l6.5 4.5L14 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
           </svg>
         </div>
-        <div><div class="contact-lbl">Email</div><div class="contact-val">hello@wallive.app</div></div>
+        <div><div class="contact-lbl">Email</div><div class="contact-val"><span class="__cf_email__" data-cfemail="0e666b6262614e796f626267786b206f7e7e">[email&#160;protected]</span></div></div>
       </a>
       <a class="contact-link" href="https://wallive.app" target="_blank">
         <div class="contact-icon">
@@ -617,22 +617,11 @@ footer { border-top: 1px solid var(--border); padding: 28px 32px; display: flex;
   <span class="footer-mark">Kraków Demo &mdash; 2025</span>
 </footer>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 function activate(id) {
   var hint = document.getElementById('hint-' + id);
   var ret  = document.getElementById('ret-' + id);
   var scan = document.getElementById('scan-' + id);
   var vid  = document.getElementById('vid-' + id);
 
-  hint.classList.add('hidden');
-  ret.classList.add('hidden');
-  scan.classList.add('hidden');
-
-  vid.classList.add('active', 'flash');
-  vid.play();
-
-  setTimeout(function() { vid.classList.remove('flash'); }, 680);
-}
-</script>
-</body>
-</html>
+  hint
