@@ -44,6 +44,14 @@
           src="./assets/animations/hejnal_silent.mp4"
           preload="auto" loop muted playsinline webkit-playsinline>
         </video>
+        <video id="lady-video"
+          src="./assets/animations/lady.mp4"
+          preload="auto" loop muted playsinline webkit-playsinline>
+        </video>
+        <video id="copernicus-video"
+          src="./assets/animations/copernicus.mp4"
+          preload="auto" loop muted playsinline webkit-playsinline>
+        </video>
       </a-assets>
 
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
@@ -60,7 +68,7 @@
         </a-text>
       </a-entity>
 
-      <!-- TARGET 1: Костёл Марии -->
+      <!-- TARGET 1: Хейналиста -->
       <a-entity mindar-image-target="targetIndex: 1">
         <a-video src="#hejnal-video" position="0 0.05 0.01" width="1.6" height="1.6"></a-video>
         <a-text value="HEJNALISTA · 1241\nThe trumpeter who saved Krakow"
@@ -72,22 +80,52 @@
         </a-text>
       </a-entity>
 
+      <!-- TARGET 2: Дама с горностаем -->
+      <a-entity mindar-image-target="targetIndex: 2">
+        <a-video src="#lady-video" position="0 0 0.01" width="1.0" height="1.3"></a-video>
+        <a-text value="LADY WITH AN ERMINE\nLeonardo da Vinci · c.1489"
+          align="center" color="#FFD600"
+          position="0 -0.85 0.01" scale="0.38 0.38 0.38">
+        </a-text>
+        <a-text value="WALLIVE AR" align="center" color="#00E5CC"
+          position="0 0.85 0.01" scale="0.25 0.25 0.25">
+        </a-text>
+      </a-entity>
+
+      <!-- TARGET 3: Коперник -->
+      <a-entity mindar-image-target="targetIndex: 3">
+        <a-video src="#copernicus-video" position="0 0 0.01" width="1.2" height="1.0"></a-video>
+        <a-text value="COPERNICUS · 1473-1543\nConversations with God"
+          align="center" color="#FFD600"
+          position="0 -0.75 0.01" scale="0.38 0.38 0.38">
+        </a-text>
+        <a-text value="WALLIVE AR" align="center" color="#00E5CC"
+          position="0 0.75 0.01" scale="0.25 0.25 0.25">
+        </a-text>
+      </a-entity>
+
     </a-scene>
 
     <script>
-      const vid0 = document.getElementById('lajkonik-video');
-      const vid1 = document.getElementById('hejnal-video');
+      var videos = [
+        document.getElementById('lajkonik-video'),
+        document.getElementById('hejnal-video'),
+        document.getElementById('lady-video'),
+        document.getElementById('copernicus-video')
+      ];
 
       function startAR() {
         document.getElementById('tap-overlay').style.display = 'none';
-        vid0.play().catch(e => {});
-        vid1.play().catch(e => {});
+        videos.forEach(function(v) { v.play().catch(function(){}); });
       }
 
-      document.querySelectorAll('[mindar-image-target]').forEach((target, i) => {
-        const vid = i === 0 ? vid0 : vid1;
-        target.addEventListener('targetFound', () => vid.play());
-        target.addEventListener('targetLost', () => vid.pause());
+      document.querySelectorAll('[mindar-image-target]').forEach(function(target, i) {
+        target.addEventListener('targetFound', function() {
+          videos[i].play().catch(function(){});
+        });
+        target.addEventListener('targetLost', function() {
+          videos[i].pause();
+        });
       });
     </script>
   </body>
