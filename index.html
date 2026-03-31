@@ -19,9 +19,22 @@
       #tap-overlay h1 { font-size: 3em; letter-spacing: 4px; margin-bottom: 12px; font-family: Arial Black; }
       #tap-overlay p { font-size: 1em; color: #FFD600; margin-bottom: 6px; }
       #tap-overlay .sub { font-size: 0.85em; color: #aaa; }
+      #screenshot-btn { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 888; display: none; background: rgba(0,0,0,0.6); border: 2px solid #00E5CC; border-radius: 50%; width: 72px; height: 72px; cursor: pointer; align-items: center; justify-content: center; flex-direction: column; gap: 4px; backdrop-filter: blur(4px); }
+      #screenshot-btn svg { width: 28px; height: 28px; fill: #00E5CC; }
+      #screenshot-btn span { font-size: 9px; color: #00E5CC; letter-spacing: 1px; text-transform: uppercase; font-family: Arial, sans-serif; }
+      #flash { position: fixed; inset: 0; background: #fff; z-index: 9999; opacity: 0; pointer-events: none; transition: opacity 0.05s; }
+      #flash.active { opacity: 1; }
+      #toast { position: fixed; bottom: 130px; left: 50%; transform: translateX(-50%); background: rgba(0,229,204,0.15); border: 1px solid #00E5CC; color: #00E5CC; font-family: Arial, sans-serif; font-size: 13px; letter-spacing: 1px; padding: 10px 20px; border-radius: 4px; z-index: 888; opacity: 0; transition: opacity 0.3s; white-space: nowrap; pointer-events: none; }
+      #toast.show { opacity: 1; }
     </style>
   </head>
   <body>
+    <div id="flash"></div>
+    <div id="toast"></div>
+    <button id="screenshot-btn" onclick="takeScreenshot()">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 15.2A3.2 3.2 0 1 0 12 8.8a3.2 3.2 0 0 0 0 6.4zm0-1.6a1.6 1.6 0 1 1 0-3.2 1.6 1.6 0 0 1 0 3.2z"/><path d="M9 3L7.17 5H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3.17L15 3H9zm3 14a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/></svg>
+      <span>Save</span>
+    </button>
     <div id="tap-overlay" onclick="startAR()">
       <h1>WALLIVE</h1>
       <p>👆 Tap to start AR</p>
@@ -114,17 +127,60 @@
         document.getElementById('copernicus-video')
       ];
 
+      var screenshotBtn = document.getElementById('screenshot-btn');
+
       function startAR() {
         document.getElementById('tap-overlay').style.display = 'none';
         videos.forEach(function(v) { v.play().catch(function(){}); });
       }
 
+      function showToast(msg) {
+        var toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.classList.add('show');
+        setTimeout(function() { toast.classList.remove('show'); }, 2500);
+      }
+
+      function flash() {
+        var f = document.getElementById('flash');
+        f.classList.add('active');
+        setTimeout(function() { f.classList.remove('active'); }, 150);
+      }
+
+      function takeScreenshot() {
+        flash();
+        var canvas = document.querySelector('canvas.a-canvas') || document.querySelector('canvas');
+        if (!canvas) { showToast('Canvas not found'); return; }
+        try {
+          var dataURL = canvas.toDataURL('image/png');
+          var filename = 'wallive-ar-' + Date.now() + '.png';
+          if (navigator.share && navigator.canShare) {
+            canvas.toBlob(function(blob) {
+              var file = new File([blob], filename, { type: 'image/png' });
+              if (navigator.canShare({ files: [file] })) {
+                navigator.share({ files: [file], title: 'WALLIVE AR', text: 'See history come alive · wallive.app' }).catch(function() { downloadFallback(dataURL, filename); });
+              } else { downloadFallback(dataURL, filename); }
+            }, 'image/png');
+          } else { downloadFallback(dataURL, filename); }
+        } catch(e) { showToast('Try again'); }
+      }
+
+      function downloadFallback(dataURL, filename) {
+        var a = document.createElement('a');
+        a.href = dataURL;
+        a.download = filename;
+        a.click();
+        showToast('Saved!');
+      }
+
       document.querySelectorAll('[mindar-image-target]').forEach(function(target, i) {
         target.addEventListener('targetFound', function() {
           videos[i].play().catch(function(){});
+          screenshotBtn.style.display = 'flex';
         });
         target.addEventListener('targetLost', function() {
           videos[i].pause();
+          screenshotBtn.style.display = 'none';
         });
       });
     </script>
