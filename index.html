@@ -149,20 +149,22 @@
 
       function takeScreenshot() {
         flash();
-        var canvas = document.querySelector('canvas.a-canvas') || document.querySelector('canvas');
-        if (!canvas) { showToast('Canvas not found'); return; }
-        try {
-          var dataURL = canvas.toDataURL('image/png');
-          var filename = 'wallive-ar-' + Date.now() + '.png';
-          if (navigator.share && navigator.canShare) {
-            canvas.toBlob(function(blob) {
-              var file = new File([blob], filename, { type: 'image/png' });
-              if (navigator.canShare({ files: [file] })) {
-                navigator.share({ files: [file], title: 'WALLIVE AR', text: 'See history come alive · wallive.app' }).catch(function() { downloadFallback(dataURL, filename); });
-              } else { downloadFallback(dataURL, filename); }
-            }, 'image/png');
-          } else { downloadFallback(dataURL, filename); }
-        } catch(e) { showToast('Try again'); }
+        requestAnimationFrame(function() {
+          requestAnimationFrame(function() {
+            var canvas = document.querySelector('canvas.a-canvas') || document.querySelector('canvas');
+            if (!canvas) { showToast('Canvas not found'); return; }
+            try {
+              var filename = 'wallive-ar-' + Date.now() + '.png';
+              canvas.toBlob(function(blob) {
+                if (!blob || blob.size < 1000) { showToast('Try again'); return; }
+                var file = new File([blob], filename, { type: 'image/png' });
+                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                  navigator.share({ files: [file], title: 'WALLIVE AR', text: 'See history come alive · wallive.app' }).catch(function() { downloadFallback(URL.createObjectURL(blob), filename); });
+                } else { downloadFallback(URL.createObjectURL(blob), filename); }
+              }, 'image/png');
+            } catch(e) { showToast('Try again'); }
+          });
+        });
       }
 
       function downloadFallback(dataURL, filename) {
