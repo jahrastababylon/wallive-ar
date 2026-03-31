@@ -151,11 +151,46 @@
         flash();
         requestAnimationFrame(function() {
           requestAnimationFrame(function() {
-            var canvas = document.querySelector('canvas.a-canvas') || document.querySelector('canvas');
-            if (!canvas) { showToast('Canvas not found'); return; }
+            var arCanvas = document.querySelector('canvas.a-canvas') || document.querySelector('canvas');
+            var camVideo = document.querySelector('video[autoplay]') || document.querySelector('.a-canvas ~ video') || (function() {
+              var vids = document.querySelectorAll('video');
+              for (var i = 0; i < vids.length; i++) {
+                if (vids[i].srcObject) return vids[i];
+              }
+              return null;
+            })();
+
+            if (!arCanvas) { showToast('Canvas not found'); return; }
+
             try {
+              var w = arCanvas.width;
+              var h = arCanvas.height;
+              var offscreen = document.createElement('canvas');
+              offscreen.width = w;
+              offscreen.height = h;
+              var ctx = offscreen.getContext('2d');
+
+              // Рисуем камеру если нашли
+              if (camVideo && camVideo.readyState >= 2) {
+                ctx.drawImage(camVideo, 0, 0, w, h);
+              } else {
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, w, h);
+              }
+
+              // Поверх рисуем AR canvas
+              ctx.drawImage(arCanvas, 0, 0, w, h);
+
+              // Логотип WALLIVE внизу
+              ctx.fillStyle = 'rgba(0,0,0,0.45)';
+              ctx.fillRect(0, h - 48, w, 48);
+              ctx.fillStyle = '#00E5CC';
+              ctx.font = 'bold 22px Arial';
+              ctx.textAlign = 'center';
+              ctx.fillText('WALLIVE AR · wallive.app', w / 2, h - 16);
+
               var filename = 'wallive-ar-' + Date.now() + '.png';
-              canvas.toBlob(function(blob) {
+              offscreen.toBlob(function(blob) {
                 if (!blob || blob.size < 1000) { showToast('Try again'); return; }
                 var file = new File([blob], filename, { type: 'image/png' });
                 if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
