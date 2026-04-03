@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<script>
+  var path = window.location.pathname;
+  // Редирект /tiger -> /tiger/, /monster -> /monster/ и т.д.
+  if (path && !path.endsWith('/')) {
+    window.location.replace(path + '/');
+  } else {
+    window.location.replace('/');
+  }
+</script>
