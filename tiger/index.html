@@ -31,6 +31,8 @@
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js"></script>
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+    <!-- aframe-extras: нужен для animation-mixer (воспроизведение GLB анимаций) -->
+    <script src="https://cdn.jsdelivr.net/npm/aframe-extras@7.0.0/dist/aframe-extras.min.js"></script>
     <style>
       body { margin: 0; overflow: hidden; background: #000; }
       #tap-overlay {
@@ -159,6 +161,8 @@
       tigerTarget.addEventListener("targetLost", function() {
         targetVisible = false;
         document.getElementById("hint").style.display = "none";
+        if (tigerEntity) tigerEntity.setAttribute("visible", false);
+        unleashed = false;
       });
 
       document.addEventListener("touchstart", handleTap, { passive: true });
