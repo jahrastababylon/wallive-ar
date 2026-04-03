@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<!--
+  WALLIVE AR · Tiger Energy — Tiger Run & Explosion Demo
+  =======================================================
+  Назначение: AR опыт для банки Tiger Energy (фиолетовая)
+  Технологии: MindAR.js 1.2.5 + A-Frame 1.4.2 + Three.js (через A-Frame)
+  Маркер: assets/targets/tiger.mind (3 ракурса банки)
+  3D модель: assets/animations/tiger.glb (анимация: Run)
+
+  Логика:
+    1. Пользователь открывает страницу, тапает "Start AR"
+    2. Наводит камеру на банку Tiger Energy
+    3. Тигр выбегает из-за банки (Run анимация)
+    4. Подсказка "TAP TO UNLEASH" мигает
+    5. Тап — вспышка + молнии + частицы из банки
+    6. Тигр исчезает во вспышке
+    7. Текст "UNLEASH THE TIGER" появляется и гаснет
+
+  Файлы:
+    assets/targets/tiger.mind       - маркер (3 ракурса банки)
+    assets/animations/tiger.glb     - 3D модель тигра (анимация Run)
+
+  Автор: WALLIVE · wallive.app
+  Последнее обновление: 2026-04
+-->
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WALLIVE AR · Tiger Energy</title>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js"></script>
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+    <style>
+      body { margin: 0; overflow: hidden; background: #000; }
+      #tap-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.92); color: #fff;
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        font-family: Arial, sans-serif; z-index: 999; cursor: pointer;
+      }
+      #tap-overlay h1 { font-size: 3em; letter-spacing: 4px; margin-bottom: 12px; font-family: Arial Black; color: #fff; }
+      #tap-overlay p { font-size: 1em; color: #b44fff; margin-bottom: 6px; }
+      #tap-overlay .sub { font-size: 0.85em; color: #aaa; }
+      #hint {
+        position: fixed; bottom: 48px; left: 50%; transform: translateX(-50%);
+        color: #fff; font-family: Arial Black, sans-serif; font-size: 15px;
+        letter-spacing: 3px; text-transform: uppercase;
+        background: rgba(180,79,255,0.3); border: 1px solid #b44fff;
+        padding: 12px 24px; border-radius: 4px;
+        display: none; pointer-events: none;
+        animation: pulse 1.2s infinite;
+      }
+      @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+      #unleash-text {
+        position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        color: #fff; font-family: Arial Black, sans-serif;
+        font-size: clamp(28px, 7vw, 52px);
+        letter-spacing: 4px; text-transform: uppercase;
+        text-align: center; line-height: 1.2;
+        text-shadow: 0 0 30px #b44fff, 0 0 60px #b44fff;
+        display: none; pointer-events: none; z-index: 500;
+      }
+      #flash {
+        position: fixed; inset: 0;
+        background: radial-gradient(circle, #fff 0%, #b44fff 50%, transparent 100%);
+        z-index: 490; opacity: 0; pointer-events: none;
+        transition: opacity 0.08s;
+      }
+      #flash.active { opacity: 0.85; }
+    </style>
+  </head>
+  <body>
+    <div id="tap-overlay" onclick="startAR()">
+      <h1>WALLIVE</h1>
+      <p>Tiger Energy AR</p>
+      <div class="sub">Tap to start · Point at the can</div>
+    </div>
+    <div id="hint">TAP TO UNLEASH</div>
+    <div id="unleash-text">UNLEASH<br>THE TIGER</div>
+    <div id="flash"></div>
+    <a-scene
+      mindar-image="imageTargetSrc: ../assets/targets/tiger.mind; autoStart: true;"
+      color-space="sRGB"
+      renderer="colorManagement: true; preserveDrawingBuffer: true;"
+      vr-mode-ui="enabled: false"
+      device-orientation-permission-ui="enabled: false"
+    >
+      <a-assets>
+        <a-asset-item id="tiger-model" src="../assets/animations/tiger.glb"></a-asset-item>
+      </a-assets>
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+      <a-entity id="tiger-target" mindar-image-target="targetIndex: 0">
+        <a-entity
+          id="tiger-model-entity"
+          gltf-model="#tiger-model"
+          position="-0.8 -0.3 0.1"
+          rotation="0 90 0"
+          scale="0.008 0.008 0.008"
+          animation-mixer="clip: Run; loop: repeat; timeScale: 1.2"
+          visible="false"
+        ></a-entity>
+        <a-entity id="fx-container" position="0 0.3 0.05"></a-entity>
+        <a-plane position="0 0 0.01" width="1.0" height="2.2"
+          material="opacity: 0; transparent: true; side: double"></a-plane>
+      </a-entity>
+    </a-scene>
+    <script>
+      // =============================================
+      // НАСТРОЙКИ — легко кастомизировать
+      // =============================================
+      var TIGER_INTRO_DURATION = 1800;   // мс — тигр выбегает на позицию
+      var PARTICLE_COUNT       = 100;    // частиц во взрыве
+      var PARTICLE_LIFETIME    = 2000;   // мс жизни частицы
+      var LIGHTNING_COUNT      = 6;      // кол-во молний
+      var LIGHTNING_LIFETIME   = 400;    // мс одной молнии
+      var UNLEASH_DURATION     = 2200;   // мс показа текста
+
+      // Цвета Tiger Energy - фиолетовый/белый/жёлтый
+      var PARTICLE_COLORS = [
+        "#b44fff", "#d488ff", "#ffffff",
+        "#ffee00", "#ff88ff", "#cc44ff"
+      ];
+      // =============================================
+
+      var arStarted     = false;
+      var targetVisible = false;
+      var unleashed     = false;
+      var tigerEntity   = null;
+      var fxContainer   = null;
+
+      function startAR() {
+        document.getElementById("tap-overlay").style.display = "none";
+        arStarted = true;
+      }
+
+      var tigerTarget = document.getElementById("tiger-target");
+
+      tigerTarget.addEventListener("targetFound", function() {
+        targetVisible = true;
+        tigerEntity   = document.getElementById("tiger-model-entity");
+        fxContainer   = document.getElementById("fx-container");
+        if (!unleashed) {
+          tigerEntity.setAttribute("visible", true);
+          tigerEntity.setAttribute("position", "-0.8 -0.3 0.1");
+          tigerEntity.setAttribute("animation", {
+            property: "position",
+            to: "-0.15 -0.3 0.1",
+            dur: TIGER_INTRO_DURATION,
+            easing: "easeOutQuad"
+          });
+          setTimeout(function() {
+            document.getElementById("hint").style.display = "block";
+          }, TIGER_INTRO_DURATION);
+        }
+      });
+
+      tigerTarget.addEventListener("targetLost", function() {
+        targetVisible = false;
+        document.getElementById("hint").style.display = "none";
+      });
+
+      document.addEventListener("touchstart", handleTap, { passive: true });
+      document.addEventListener("click", handleTap);
+
+      function handleTap() {
+        if (!arStarted || !targetVisible || unleashed) return;
+        unleash();
+      }
+
+      function unleash() {
+        unleashed = true;
+        document.getElementById("hint").style.display = "none";
+
+        // Вспышка
+        var flash = document.getElementById("flash");
+        flash.classList.add("active");
+        setTimeout(function() { flash.classList.remove("active"); }, 200);
+
+        // Тигр исчезает
+        if (tigerEntity) {
+          tigerEntity.setAttribute("animation", {
+            property: "scale", to: "0 0 0", dur: 300, easing: "easeInQuad"
+          });
+          setTimeout(function() { tigerEntity.setAttribute("visible", false); }, 300);
+        }
+
+        // Молнии с задержкой
+        for (var i = 0; i < LIGHTNING_COUNT; i++) {
+          (function(idx) {
+            setTimeout(createLightning, idx * 80);
+          })(i);
+        }
+
+        // Частицы
+        createParticles();
+
+        // Текст UNLEASH THE TIGER
+        var text = document.getElementById("unleash-text");
+        text.style.display = "block";
+        text.style.opacity = "0";
+        text.style.transition = "opacity 0.2s";
+        setTimeout(function() { text.style.opacity = "1"; }, 50);
+        setTimeout(function() {
+          text.style.transition = "opacity 0.5s";
+          text.style.opacity = "0";
+          setTimeout(function() {
+            text.style.display = "none";
+            unleashed = false;
+          }, 500);
+        }, UNLEASH_DURATION);
+      }
+
+      // Молния через Three.js линии (Three.js доступен через A-Frame)
+      function createLightning() {
+        var targetObj = document.getElementById("tiger-target").object3D;
+        var points = [];
+        var segments = 8 + Math.floor(Math.random() * 6);
+        for (var i = 0; i <= segments; i++) {
+          points.push(new THREE.Vector3(
+            (Math.random() - 0.5) * 0.15,
+            (i / segments) * 1.2,
+            (Math.random() - 0.5) * 0.1
+          ));
+        }
+        var geometry = new THREE.BufferGeometry().setFromPoints(points);
+        var material = new THREE.LineBasicMaterial({
+          color: Math.random() > 0.5 ? 0xffffff : 0xb44fff,
+          transparent: true, opacity: 1
+        });
+        var line = new THREE.Line(geometry, material);
+        targetObj.add(line);
+        var start = Date.now();
+        function fadeLine() {
+          var elapsed = Date.now() - start;
+          if (elapsed >= LIGHTNING_LIFETIME) {
+            targetObj.remove(line);
+            geometry.dispose(); material.dispose();
+            return;
+          }
+          material.opacity = 1 - (elapsed / LIGHTNING_LIFETIME);
+          requestAnimationFrame(fadeLine);
+        }
+        requestAnimationFrame(fadeLine);
+      }
+
+      // Частицы
+      function createParticles() {
+        if (!fxContainer) return;
+        for (var i = 0; i < PARTICLE_COUNT; i++) {
+          (function() {
+            var particle = document.createElement("a-sphere");
+            var size  = 0.01 + Math.random() * 0.04;
+            var color = PARTICLE_COLORS[Math.floor(Math.random() * PARTICLE_COLORS.length)];
+            var theta = Math.random() * Math.PI * 2;
+            var phi   = Math.random() * Math.PI;
+            var speed = 0.015 + Math.random() * 0.02;
+            var vx = Math.sin(phi) * Math.cos(theta) * speed;
+            var vy = Math.sin(phi) * Math.sin(theta) * speed + 0.01;
+            var vz = Math.cos(phi) * speed;
+            particle.setAttribute("radius", size);
+            particle.setAttribute("material", "shader: flat; color: " + color + "; opacity: 1");
+            particle.setAttribute("position", "0 0 0");
+            fxContainer.appendChild(particle);
+            var startTime = Date.now();
+            var x = 0, y = 0, z = 0, velY = vy;
+            function animate() {
+              var elapsed = Date.now() - startTime;
+              if (elapsed >= PARTICLE_LIFETIME) {
+                if (particle.parentNode) particle.parentNode.removeChild(particle);
+                return;
+              }
+              x += vx; y += velY; z += vz; velY -= 0.0004;
+              var opacity = 1 - (elapsed / PARTICLE_LIFETIME);
+              particle.setAttribute("position", x + " " + y + " " + z);
+              particle.setAttribute("material", "shader: flat; color: " + color + "; opacity: " + opacity);
+              requestAnimationFrame(animate);
+            }
+            setTimeout(function() { requestAnimationFrame(animate); }, Math.random() * 100);
+          })();
+        }
+      }
+    </script>
+  </body>
+</html>
