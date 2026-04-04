@@ -101,7 +101,7 @@
           rotation="0 90 0"
           scale="0.008 0.008 0.008"
           animation-mixer="clip: Run; loop: repeat; timeScale: 1.2"
-          visible="false"
+          visible="true"
         ></a-entity>
         <a-entity id="fx-container" position="0 0.3 0.05"></a-entity>
         <a-plane position="0 0 0.01" width="1.0" height="2.2"
@@ -163,7 +163,6 @@
       tigerTarget.addEventListener("targetLost", function() {
         targetVisible = false;
         document.getElementById("hint").style.display = "none";
-        if (tigerEntity) tigerEntity.setAttribute("visible", false);
         unleashed = false;
       });
 
